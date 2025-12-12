@@ -2,37 +2,47 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class EventController extends Controller
 {
-    //
-
-    public function index(Request $request)
+    /**
+     * Események lista (nyilvános)
+     */
+    public function index()
     {
-        $events = Event::where('starts_at', '>', now())
-            ->orderBy('starts_at')
-            ->paginate(6)
-            ->through(function ($event) {
-                return [
-                    'id' => $event->id,
-                    'name' => $event->name,
-                    'description' => $event->description,
-                    'starts_at' => $event->starts_at->format('Y.m.d. H:i'),
-                    'image_url' => $event->image_path ? Storage::url($event->image_path) : null,
-                    'remaining' => $event->remainingSeats(),
-                    'is_full' => $event->isFull(),
-                ];
-            });
+    $events = Event::orderBy('starts_at')->paginate(6);
+
 
         return Inertia::render('Events/Index', [
             'events' => $events,
         ]);
     }
 
+    /**
+     * Új esemény létrehozó oldal
+     */
+    public function create()
+    {
+        if (! Auth::check()) {
+            abort(403);
+        }
+
+        return Inertia::render('Events/Create');
+    }
+
+    /**
+     * Új esemény mentése
+     */
     public function store(Request $request)
     {
-        $this->authorize('create', Event::class);
+        if (! Auth::check()) {
+            abort(403);
+        }
 
         $data = $request->validate([
             'name' => 'required|string|min:5',
@@ -43,22 +53,74 @@ class EventController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('events', 'public');
-            $data['image_path'] = $path;
+            $data['image_path'] = $request->file('image')->store('events', 'public');
         }
 
-        $data['user_id'] = $request->user()->id;
+        $data['user_id'] = Auth::id();
 
         Event::create($data);
 
-        //return redirect()->route('events.index')->with('success', 'Sikeres mentés');
+        return redirect()->route('events.index')
+            ->with('success', 'Sikeres mentés!');
     }
 
+    /**
+     * Esemény szerkesztése
+     */
+    public function edit(Event $event)
+    {
+        if ($event->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return Inertia::render('Events/Edit', [
+            'event' => $event,
+        ]);
+    }
+
+    /**
+     * Esemény módosítása
+     */
+    public function update(Request $request, Event $event)
+    {
+        if ($event->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'name' => 'required|string|min:5',
+            'starts_at' => 'required|date|after:now',
+            'description' => 'nullable|string|max:5000',
+            'limit' => 'required|integer|min:1',
+            'image' => 'nullable|image|max:3072',
+        ]);
+
+        if ($request->hasFile('image')) {
+            if ($event->image_path && Storage::disk('public')->exists($event->image_path)) {
+                Storage::disk('public')->delete($event->image_path);
+            }
+
+            $data['image_path'] = $request->file('image')->store('events', 'public');
+        }
+
+        $event->update($data);
+
+        return redirect()->route('events.index')
+            ->with('success', 'Esemény frissítve!');
+    }
+
+    /**
+     * Esemény törlése (soft delete)
+     */
     public function destroy(Event $event)
     {
-        $this->authorize('delete', $event);
+        if ($event->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $event->delete();
 
-        //return redirect()->route('events.index')->with('success', 'Esemény törölve');
+        return redirect()->route('events.index')
+            ->with('success', 'Esemény törölve!');
     }
 }

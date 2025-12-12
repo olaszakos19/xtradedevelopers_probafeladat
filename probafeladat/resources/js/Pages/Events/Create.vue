@@ -74,7 +74,7 @@ const imagePreview = ref(null)
 
 function isFutureDate(value) {
   if (!value) return false
-  // value is YYYY-MM-DD — compare as local dates
+
   const today = new Date()
   today.setHours(0,0,0,0)
   const parts = value.split('-').map(Number)
@@ -146,22 +146,26 @@ function validate() {
 }
 
 function onSubmit() {
-  submitted.value = true
-  if (!validate()) return
+    submitted.value = true
+    if (!validate()) return
 
-  // Mock submit — here you would send `form` to a server (e.g. using fetch / axios)
-  const payload = new FormData()
-  payload.append('name', form.name.trim())
-  payload.append('date', form.date)
-  payload.append('description', form.description)
-  payload.append('limit', String(form.limit))
-  if (form.image) payload.append('image', form.image)
+    const payload = new FormData()
+    payload.append('name', form.name.trim())
+    payload.append('starts_at', form.date)   // Laravel mező neve: starts_at
+    payload.append('description', form.description)
+    payload.append('limit', String(form.limit))
+    if (form.image) payload.append('image', form.image)
 
-  // Simulate success
-  console.log('Submitting form payload (FormData):', payload)
-  // After successful submit:
-  submitted.value = true
-  alert('Űrlap sikeresen elküldve (konzolban látható a FormData).')
+    // Küldés a backend felé
+    router.post('/events', payload, {
+        onSuccess: () => {
+            alert('Űrlap sikeresen elküldve!')
+            resetForm()
+        },
+        onError: (errors) => {
+            console.log('Backend validation errors:', errors)
+        }
+    })
 }
 
 function resetForm() {
