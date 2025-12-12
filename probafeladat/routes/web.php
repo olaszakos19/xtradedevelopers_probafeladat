@@ -8,9 +8,7 @@ use Inertia\Inertia;
 
 Route::get('/', [EventController::class, 'index'])->name('events.index');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -25,7 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
 
-    Route::post('/events/{event}/signup', [EventSignUpController::class, 'store']);
+    Route::post('/events/{event}/signup', [EventController::class, 'signup']);
 });
 
 require __DIR__.'/auth.php';

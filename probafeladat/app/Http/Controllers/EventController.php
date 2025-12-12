@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -15,7 +17,24 @@ class EventController extends Controller
      */
     public function index()
     {
-        $events = Event::orderBy('starts_at')->paginate(6);
+        $userId = auth()->id();
+
+        $events = Event::withCount('event_registrations') // mennyi a jelentkezés
+            ->orderBy('starts_at')
+            ->paginate(6)
+            ->through(function ($event) use ($userId) {
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'starts_at' => $event->starts_at,
+                    'limit' => $event->limit,
+                    'image_path' => $event->image_path,
+                    'user_id' => $event->user_id,
+                    'already_joined' => $userId ? $event->event_registrations()->where('user_id', $userId)->exists() : false,
+                    'is_full' => $event->event_registrations_count >= $event->limit,
+                ];
+            });
 
         return Inertia::render('Events/Index', [
             'events' => $events,
@@ -68,6 +87,7 @@ class EventController extends Controller
      */
     public function edit(Event $event)
     {
+
         if ($event->user_id !== Auth::id()) {
             abort(403);
         }
@@ -108,7 +128,7 @@ class EventController extends Controller
     }
 
     /**
-     * Esemény törlése (soft delete)
+     * Esemény törlése
      */
     public function destroy(Event $event)
     {
@@ -118,7 +138,35 @@ class EventController extends Controller
 
         $event->delete();
 
-        return redirect()->route('events.index')
-            ->with('success', 'Esemény törölve!');
+        return redirect()->route('events.index')->with('success', 'Esemény törölve!');
+
+    }
+
+    public function signup(Event $event)
+    {
+        $user = auth()->user();
+
+        if ($event->event_registrations()->where('user_id', $user->id)->exists()) {
+            return back()->with('error', 'Már jelentkeztél erre az eseményre.');
+        }
+
+        DB::transaction(function () use ($event, $user) {
+
+            $event = Event::where('id', $event->id)->lockForUpdate()->first();
+
+            if ($event->event_registrations()->count() >= $event->limit) {
+                abort(400, 'Az esemény betelt.');
+            }
+
+            $event->event_registrations()->create([
+                'user_id' => $user->id,
+            ]);
+
+            // Mail::to($event->creator->email)->send(new \App\Mail\NewSignup($user, $event));
+
+            // Mail::to($user->email)->send(new \App\Mail\SignupConfirmation($event));
+        });
+
+        return back()->with('success', 'Sikeres jelentkezés!');
     }
 }

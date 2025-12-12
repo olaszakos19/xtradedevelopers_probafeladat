@@ -97,12 +97,12 @@ function onSubmit() {
   router.put(`/events/${event.id}`, payload, {
     onSuccess: () => {
       alert('Esemény sikeresen frissítve!')
-      router.get('/events')
+     
     }
   })
 }
 
 function cancel() {
-  router.get('/events')
+  router.get('/')
 }
 </script>

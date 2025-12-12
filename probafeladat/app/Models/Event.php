@@ -25,4 +25,14 @@ class Event extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function event_registrations()
+    {
+        return $this->hasMany(Registration::class);
+    }
+
+    public function getRegistrations()
+    {
+        return $this->event_registrations()->count();
+    }
 }
