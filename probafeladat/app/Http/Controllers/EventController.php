@@ -19,10 +19,13 @@ class EventController extends Controller
     {
         $userId = auth()->id();
 
-        $events = Event::withCount('event_registrations') // mennyi a jelentkezés
+        $events = Event::withCount('event_registrations')
             ->orderBy('starts_at')
             ->paginate(6)
             ->through(function ($event) use ($userId) {
+                $alreadyJoined = $event->event_registrations()
+                ->where('user_id', $userId)
+                ->exists();
                 return [
                     'id' => $event->id,
                     'name' => $event->name,
@@ -31,8 +34,9 @@ class EventController extends Controller
                     'limit' => $event->limit,
                     'image_path' => $event->image_path,
                     'user_id' => $event->user_id,
-                    'already_joined' => $userId ? $event->event_registrations()->where('user_id', $userId)->exists() : false,
+                    'already_joined' => $alreadyJoined,
                     'is_full' => $event->event_registrations_count >= $event->limit,
+                    'reservedCount' => $event->getRegistrations()
                 ];
             });
 
@@ -142,9 +146,9 @@ class EventController extends Controller
 
     }
 
-    public function signup(Event $event)
+    public function signup(Event $event) 
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if ($event->event_registrations()->where('user_id', $user->id)->exists()) {
             return back()->with('error', 'Már jelentkeztél erre az eseményre.');
@@ -169,4 +173,6 @@ class EventController extends Controller
 
         return back()->with('success', 'Sikeres jelentkezés!');
     }
+
+
 }

@@ -22,7 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/events/{event}/edit', [EventController::class, 'edit']);
     Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
-
+    Route::delete('/events/{event}/leave', [EventController::class, 'leave'])->name('events.leave');
     Route::post('/events/{event}/signup', [EventController::class, 'signup'])->middleware('auth')->name('events.signup');
 });
 
