@@ -6,7 +6,7 @@
   - Események létrehozása, módosítása és törlése (soft delete)
   - Csak a saját eseményeiket tudják a felhasználók szerkeszteni/törölni
 - **Feliratkozás eseményekre**
-  - Egy felhasználó csak egyszer jelentkezhet ugyanarra az eseményre
+  - Egy felhasználó csak egyszer jelentkezhet ugyanarra az eseményre ha betelt az esemény jelzi azt is ha már jelenkezett
 
 - **Kártya nézet**
   - Az események kártya nézetben jelennek meg, a kép, név, dátum és státusz információkkal
@@ -20,6 +20,6 @@
 - `EventRegistration.php` – Kapcsolótábla a feliratkozásokhoz (`event_id`, `user_id`)
 
 - `EventCard.vue` – Események kártya nézete, tartalmazza:
-- „Jelentkezem"  gomb logikát
+- „Jelentkezem,Már jelentkeztem,Betelt"  gomb logikát
 - Saját események esetén „Módosítás” és „Törlés” gombokat
 - `Index.vue` – Lista oldal, grid nézet, login/logout gombok, „+ Új esemény” gomb
