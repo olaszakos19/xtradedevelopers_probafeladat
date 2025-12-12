@@ -23,7 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/events/{event}', [EventController::class, 'update']);
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
 
-    Route::post('/events/{event}/signup', [EventController::class, 'signup']);
+    Route::post('/events/{event}/signup', [EventController::class, 'signup'])->middleware('auth')->name('events.signup');
 });
 
 require __DIR__.'/auth.php';
