@@ -3,21 +3,21 @@
     <h1>Űrlap</h1>
 
     <form @submit.prevent="onSubmit" novalidate>
-      <!-- Név -->
+      
       <label>
         Név
         <input type="text" v-model.trim="form.name" @blur="touched.name = true" />
       </label>
       <p v-if="showError('name')" class="error">{{ errors.name }}</p>
 
-      <!-- Dátum -->
+   
       <label>
         Dátum
         <input type="date" v-model="form.date" @blur="touched.date = true" />
       </label>
       <p v-if="showError('date')" class="error">{{ errors.date }}</p>
 
-      <!-- Leírás -->
+   
       <label>
         Leírás
         <textarea v-model="form.description" :maxlength="5000" @blur="touched.description = true"></textarea>
@@ -27,25 +27,21 @@
       </div>
       <p v-if="showError('description')" class="error">{{ errors.description }}</p>
 
-      <!-- Limit -->
+    
       <label>
         Limit
         <input type="number" v-model.number="form.limit" min="1" @blur="touched.limit = true" />
       </label>
       <p v-if="showError('limit')" class="error">{{ errors.limit }}</p>
 
-      <!-- Kép -->
+    
       <label>
         Kép (opcionális)
         <input type="file" @change="onFileChange" accept="image/*" />
       </label>
       <p v-if="showError('image')" class="error">{{ errors.image }}</p>
 
-      <div v-if="imagePreview" class="preview">
-        <p>Előnézet:</p>
-        <img :src="imagePreview" alt="kép előnézet" />
-        <button type="button" @click="removeImage">Kép eltávolítása</button>
-      </div>
+
 
       <div class="actions">
         <button type="submit">Küldés</button>
@@ -59,7 +55,7 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
-
+import { router } from '@inertiajs/vue3'
 const form = reactive({
   name: '',
   date: '',
@@ -130,13 +126,6 @@ function onFileChange(e) {
   }
 }
 
-function removeImage() {
-  form.image = null
-  imagePreview.value = null
-  // also clear the file input value — find it in DOM
-  const input = document.querySelector('input[type=file]')
-  if (input) input.value = ''
-}
 
 function validate() {
   // force compute errors by touching all fields
@@ -151,12 +140,12 @@ function onSubmit() {
 
     const payload = new FormData()
     payload.append('name', form.name.trim())
-    payload.append('starts_at', form.date)   // Laravel mező neve: starts_at
+    payload.append('starts_at', form.date)  
     payload.append('description', form.description)
     payload.append('limit', String(form.limit))
     if (form.image) payload.append('image', form.image)
 
-    // Küldés a backend felé
+   
     router.post('/events', payload, {
         onSuccess: () => {
             alert('Űrlap sikeresen elküldve!')

@@ -1,9 +1,7 @@
 <template>
     <div class="max-w-5xl mx-auto py-10 px-4">
-
         <!-- NAVBAR -->
         <div class="flex justify-end mb-6 space-x-3">
-
             <!-- Ha nincs belépve -->
             <template v-if="!$page.props.auth || !$page.props.auth.user">
                 <Link
@@ -32,7 +30,6 @@
                     </button>
                 </form>
             </template>
-
         </div>
 
         <!-- Cím + Add Event gomb -->
@@ -56,9 +53,9 @@
                 v-for="event in events.data"
                 :key="event.id"
                 :event="event"
+                :auth="$page.props.auth"
             />
         </div>
-
     </div>
 </template>
 
@@ -75,7 +72,7 @@ export default {
     methods: {
         logout() {
             router.post("/logout");
-        }
-    }
+        },
+    },
 };
 </script>

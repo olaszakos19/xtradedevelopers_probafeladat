@@ -15,8 +15,7 @@ class EventController extends Controller
      */
     public function index()
     {
-    $events = Event::orderBy('starts_at')->paginate(6);
-
+        $events = Event::orderBy('starts_at')->paginate(6);
 
         return Inertia::render('Events/Index', [
             'events' => $events,
@@ -105,8 +104,7 @@ class EventController extends Controller
 
         $event->update($data);
 
-        return redirect()->route('events.index')
-            ->with('success', 'Esemény frissítve!');
+        return redirect()->route('events.index')->with('success', 'Esemény frissítve!');
     }
 
     /**
